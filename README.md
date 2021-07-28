@@ -5,6 +5,9 @@ This is some POC code that I whipped up after watching a TED-ED riddle video ([C
 
 **This software will try and brute force an escape route for the scientist. Spoiler alert, the conclusion in the video isn't wrong.**
 
+## Screenshots
+<img alt="First screenshot of 4x4 grid trying to be solved" src="/blob/screenshot_1.png?raw=true" width="250"><img alt="Second screenshot of 4x4 grid trying to be solved" src="/blob/screenshot_2.png?raw=true" width="250"><img alt="Third screenshot of 4x4 grid trying to be solved" src="/blob/screenshot_3.png?raw=true" width="250"><img alt="Fourth screenshot of 4x4 grid trying to be solved" src="/blob/screenshot_4.png?raw=true" width="250"><img alt="Screenshot of a solved 5x5 grid" src="/blob/screenshot_5.png?raw=true" width="250">
+
 ## Prerequisites
 - Python 3
 - Pygame
