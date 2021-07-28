@@ -1,5 +1,6 @@
 import sys
 import pygame
+from grid_solver.grid_solver import GridSolver
 
 class GridSolverUI():
 	# Constants
@@ -12,14 +13,15 @@ class GridSolverUI():
 	CELL_BORDER_SIZE = 2
 	POINT_RADIUS = 20
 	LINE_WIDTH = 9 # Needs to be odd for line to be centered
-	ANIMATION_INTERVAL = 100 # Interval in milliseconds
+	ANIMATION_INTERVAL = 7 # Interval in milliseconds
+	POLL_INTERVAL = 250 # Interval in milliseconds
 	# Variables
 	running = False
 
-	def __init__(self, grid_solver):
+	def __init__(self):
 		# Calculate "constant"
 		self.GRID_CELL_SIZE = (self.SCREEN_HEIGHT_WIDTH - self.CELL_SPACING) / self.GRID_ROW_SIZE
-		self.grid_solver = grid_solver
+		self.grid_solver = GridSolver(self.GRID_ROW_SIZE, start_coord=(0, 0), destination_coord=(3, 3))
 		# Initialize Pygame
 		pygame.init()
 		self.surface = pygame.display.set_mode((self.SCREEN_HEIGHT_WIDTH, self.SCREEN_HEIGHT_WIDTH))
@@ -49,38 +51,43 @@ class GridSolverUI():
 
 	def draw_line_between(self, cell_pos1, cell_pos2):
 		pygame.draw.line(self.surface, self.COLOR_RED, self.find_center(cell_pos1), self.find_center(cell_pos2), self.LINE_WIDTH)
+	
+	def animate_move(self, cell_pos1, cell_pos2, skip_animation=False):
+		self.draw_line_between(cell_pos1, cell_pos2)
+		if not skip_animation:
+			pygame.display.flip()
+			pygame.time.wait(self.ANIMATION_INTERVAL)
+		self.draw_point(cell_pos2)
+		pygame.display.flip()
+		if not skip_animation:
+			pygame.time.wait(self.ANIMATION_INTERVAL)
+		self.process_ui_events()
+
+	def draw_reset(self, traveled_array):
+		self.reset_grid()
+		for i in range(0, len(traveled_array)):
+			if i == 0:
+				self.draw_point(traveled_array[i])
+				continue
+			self.animate_move(traveled_array[i - 1], traveled_array[i], skip_animation=True)
+		self.process_ui_events()
 
 	def run(self):
 		self.running = True
 		self.reset_grid()
-		# Debug (animating travel)
-		points = []
-		for x in range(0, self.GRID_ROW_SIZE):
-			for y in range(0, self.GRID_ROW_SIZE):
-				points.append((x, y))
-		self.draw_point(points[0])
-		pygame.display.flip()
-		pygame.time.wait(self.ANIMATION_INTERVAL)
-		i = 0
-		while i < len(points) - 1:
-			self.draw_line_between(points[i], points[i + 1])
-			pygame.display.flip()
-			pygame.time.wait(self.ANIMATION_INTERVAL)
-			self.draw_point(points[i + 1])
-			pygame.display.flip()
-			pygame.time.wait(self.ANIMATION_INTERVAL)
-			i += 1
-		# End debug
-		# Game loop
-		while self.running:
-			for event in pygame.event.get():
-				if event.type == pygame.QUIT:
-					self.running = False
-					break
-				elif event.type == pygame.KEYDOWN:
-					if event.key == pygame.K_ESCAPE:
-						self.running = False
-						break
-		# Game loop broke, bye bye
-		pygame.quit()
-		sys.exit()
+		self.draw_point(self.grid_solver.start_coord)
+		self.grid_solver.solve_path(animate_move_callback=self.animate_move, draw_reset_callback=self.draw_reset)
+		while True:
+			self.process_ui_events()
+			pygame.time.wait(self.POLL_INTERVAL)
+	
+	# Threading/Async would have to be implemented to handle events properly but this is just a POC and it works so idgaf
+	def process_ui_events(self):
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				sys.exit()
+			elif event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_ESCAPE:
+					pygame.quit()
+					sys.exit()
